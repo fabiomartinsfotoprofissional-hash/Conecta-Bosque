@@ -1,1 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conecta Bosque - Condomínio Bosque Clube Cotia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bosque: {
+                            dark: '#062816',
+                            DEFAULT: '#0B4619',
+                            light: '#116530',
+                            accent: '#D4AF37',
+                            goldlight: '#F3E5AB'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #security-shield {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: black; z-index: 99999; display: none; pointer-events: none;
+        }
+        @media print {
+            #security-shield { display: block !important; }
+            body { display: none !important; }
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #062816; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-bosque-dark text-gray-100 h-full flex flex-col antialiased selection:bg-bosque-accent selection:text-bosque-dark">
 
+    <div id="security-shield"></div>
+
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-bosque border-2 border-bosque-accent rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center">
+            <div id="modal-icon" class="text-4xl text-bosque-accent mb-3"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3 id="modal-title" class="text-lg font-bold text-bosque-goldlight mb-2">Aviso Conecta Bosque</h3>
+            <p id="modal-message" class="text-sm text-gray-200 mb-6 leading-relaxed"></p>
+            <button onclick="closeModal()" class="w-full bg-bosque-accent hover:bg-yellow-500 text-bosque-dark font-bold py-2.5 px-4 rounded-xl transition shadow-lg">Entendido</button>
+        </div>
+    </div>
+
+    <div id="app" class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+        <div id="auth-screen" class="absolute inset-0 z-40 bg-bosque-dark flex flex-col items-center justify-center p-4 overflow-y-auto">
+            <div class="max-w-md w-full bg-bosque border border-bosque-accent/40 rounded-3xl p-6 md:p-8 shadow-2xl my-auto text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-bosque-dark border-2 border-bosque-accent mb-3 shadow-xl">
+                    <i class="fa-solid fa-tree text-3xl text-bosque-accent"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-bosque-goldlight tracking-wide">CONECTA BOSQUE</h1>
+                <p class="text-xs text-gray-300 mt-1 font-medium">Condomínio Bosque Clube Cotia</p>
+                <p class="text-[10px] text-bosque-accent mt-0.5 font-semibold mb-6">Desenvolvido por Fabio Martins</p>
+
+                <div class="mb-5">
+                    <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-gray-100 text-gray-800 font-bold py-3 px-4 rounded-xl shadow-md flex items-center justify-center space-x-3 transition text-sm border border-gray-300">
+                        <i class="fa-brands fa-google text-red-500 text-base"></i>
+                        <span>Continuar com a Conta Google</span>
+                    </button>
+                    <div class="flex items-center my-4">
+                        <div class="flex-grow border-t border-bosque-accent/30"></div>
+                        <span class="px-3 text-[10px] text-gray-400 uppercase tracking-widest font-semibold">ou preencha abaixo</span>
+                        <div class="flex-grow border-t border-bosque-accent/30"></div>
+                    </div>
+                </div>
+
+                <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Nome Completo</label>
+                        <input type="text" id="reg-name" required placeholder="Seu nome completo" class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">RG</label>
+                            <input type="text" id="reg-rg" required placeholder="00.000.000-0" class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">CPF</label>
+                            <input type="text" id="reg-cpf" required maxlength="14" placeholder="000.000.000-00" oninput="maskCPF(this)" class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Nascimento (Maior 18 anos)</label>
+                            <input type="date" id="reg-dob" required class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">WhatsApp</label>
+                            <input type="tel" id="reg-whatsapp" required placeholder="(11) 90000-0000" class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-bosque-goldlight mb-1">E-mail Válido</label>
+                        <input type="email" id="reg-email" required placeholder="seu@email.com" class="w-full bg-bosque-dark/80 border border-bosque-accent/30 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bosque-accent">
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-gradient-to-r from-bosque-accent to-yellow-600 text-bosque-dark font-bold py-3 px-4 rounded-xl shadow-lg hover:brightness-105 transition text-sm">
+                            Entrar no Conecta Bosque
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-center text-gray-400 mt-3">Acesso estrito a maiores de 18 anos. Monitoramento antiofensas 24h.</p>
+                </form>
+            </div>
+        </div>
+
+        <div id="main-content" class="flex-1 flex flex-col h-full hidden">
+            <header class="bg-bosque border-b border-bosque-accent/30 px-4 py-3 shadow-md z-20">
+                <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center justify-between w-full md:w-auto">
+                        <div class="flex items-center space-x-2">
+                            <div class="p-2 bg-bosque-dark rounded-xl border border-bosque-accent/40 w-10 h-10 flex items-center justify-center">
+                                <i class="fa-solid fa-tree text-bosque-accent"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-base font-bold text-bosque-goldlight tracking-wide leading-tight">CONECTA BOSQUE</h1>
+                                <p class="text-[10px] text-gray-300">Desenvolvido por Fabio Martins</p>
+                            </div>
+                        </div>
+                        <button onclick="openNewAdModal()" class="md:hidden bg-bosque-accent text-bosque-dark font-bold px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow">
+                            <i class="fa-solid fa-plus"></i> <span>Novo</span>
+                        </button>
+                    </div>
+
+                    <div class="w-full md:flex-1 md:max-w-md relative">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-bosque-accent">
+                                <i class="fa-solid fa-search text-xs"></i>
+                            </span>
+                            <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar classificados ou digite 'policia', 'sabesp', 'enel'..." class="w-full bg-bosque-dark/90 border border-bosque-accent/40 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-bosque-accent">
+                        </div>
+                        <div id="public-services-results" class="absolute left-0 right-0 top-full mt-1 bg-bosque border border-bosque-accent/50 rounded-xl shadow-2xl hidden z-30 p-3 space-y-2 max-h-60 overflow-y-auto">
+                        </div>
+                    </div>
+
+                    <div class="hidden md:flex items-center space-x-3">
+                        <button onclick="openNewAdModal()" class="bg-gradient-to-r from-bosque-accent to-yellow-600 text-bosque-dark font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow-lg hover:brightness-105 transition">
+                            <i class="fa-solid fa-plus"></i> <span>Novo Classificado</span>
+                        </button>
+                        <div class="text-right">
+                            <p id="user-display-name" class="text-xs font-bold text-bosque-goldlight">Usuário</p>
+                            <button onclick="logout()" class="text-[10px] text-red-400 hover:underline">Sair</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <nav class="bg-bosque-dark/95 border-b border-bosque-accent/20 px-4 py-2 flex items-center justify-center space-x-2 md:space-x-4 text-xs font-semibold overflow-x-auto">
+                <button onclick="filterCategory('all')" id="cat-all" class="cat-btn px-4 py-1.5 rounded-xl bg-bosque-accent text-bosque-dark shadow transition">Todos</button>
+                <button onclick="filterCategory('vendas')" id="cat-vendas" class="cat-btn px-4 py-1.5 rounded-xl bg-bosque/80 text-gray-300 hover:text-white transition">Vendas</button>
+                <button onclick="filterCategory('doacoes')" id="cat-doacoes" class="cat-btn px-4 py-1.5 rounded-xl bg-bosque/80 text-gray-300 hover:text-white transition">Doações</button>
+                <button onclick="filterCategory('servicos')" id="cat-servicos" class="cat-btn px-4 py-1.5 rounded-xl bg-bosque/80 text-gray-300 hover:text-white transition">Serviços</button>
+            </nav>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 max-w-4xl mx-auto w-full space-y-6">
+                <div class="bg-gradient-to-r from-bosque to-bosque-light border border-bosque-accent/40 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <span class="inline-block bg-bosque-accent/20 text-bosque-accent border border-bosque-accent/40 text-[10px] font-bold px-2.5 py-1 rounded-full mb-2">Vitrine Ativa 24h</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-bosque-goldlight">Classificados & Serviços</h2>
+                            <p class="text-xs text-gray-200 mt-1 max-w-lg">Condomínio Bosque Clube Cotia. Anúncios divididos em Vendas, Doações e Serviços. Gratuito (WhatsApp estático) ou pago (botões diretos)!</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="text-center px-4 py-2 bg-bosque-dark/60 rounded-2xl border border-bosque-accent/30">
+                                <span id="stats-total-ads" class="block text-lg font-bold text-bosque-accent">0</span>
+                                <span class="text-[10px] text-gray-300 uppercase tracking-wider">Ativos</span>
+                            </div>
+                            <div class="text-center px-4 py-2 bg-bosque-dark/60 rounded-2xl border border-bosque-accent/30">
+                                <span id="stats-total-clicks" class="block text-lg font-bold text-bosque-accent">0</span>
+                                <span class="text-[10px] text-gray-300 uppercase tracking-wider">Cliques</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ads-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+            </main>
+
+            <footer class="bg-bosque border-t border-bosque-accent/30 px-4 py-2.5 text-xs z-20">
+                <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-gray-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-cloud-sun text-bosque-accent"></i>
+                            <span id="footer-weather" class="font-medium text-white">Cotia/SP: 23°C Parcialmente Nublado</span>
+                        </div>
+                        <span class="text-bosque-accent/40 hidden sm:inline">|</span>
+                        <div class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-road text-green-400" id="traffic-icon"></i>
+                            <span id="footer-traffic" class="font-medium text-white">Raposo Tavares: Fluindo Normal</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-gray-400 text-center sm:text-right">
+                        <span>Conecta Bosque v3.0 • Desenvolvido por Fabio Martins</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <div id="ad-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+            <div class="bg-bosque border-2 border-bosque-accent rounded-3xl p-6 max-w-lg w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4 border-b border-bosque-accent/30 pb-3">
+                    <h3 id="ad-modal-title" class="text-lg font-bold text-bosque-goldlight">Novo Classificado</h3>
+                    <button onclick="closeAdModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                
+                <div id="free-tier-notice" class="bg-yellow-900/40 border border-bosque-accent/50 rounded-xl p-3 mb-4 text-xs text-yellow-200">
+                    <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Anúncio Gratuito:</p>
+                    <p>O WhatsApp aparece em texto estático. Quer botões clicáveis e destaque?</p>
+                    <a href="https://wa.me/5511947917162?text=Olá%20Fabio!%20Quero%20fazer%20o%20upgrade%20do%20meu%20anúncio%20no%20Conecta%20Bosque." target="_blank" class="inline-block mt-2 bg-bosque-accent text-bosque-dark font-bold px-3 py-1.5 rounded-lg shadow hover:bg-yellow-500 transition">
+                        <i class="fa-brands fa-whatsapp mr-1"></i> Falar com Fabio Martins (11 94791-7162)
+                    </a>
+                </div>
+
+                <form id="ad-form" onsubmit="saveAd(event)" class="space-y-4">
+                    <input type="hidden" id="ad-id">
+                    <input type="hidden" id="ad-is-paid" value="false">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Categoria</label>
+                        <select id="ad-category" required class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent">
+                            <option value="vendas">Vendas</option>
+                            <option value="doacoes">Doação (Tarja Vermelha)</option>
+                            <option value="servicos">Serviços</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Título do Anúncio</label>
+                        <input type="text" id="ad-title" required placeholder="Ex: Bicicleta aro 29 seminova" class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Descrição</label>
+                        <textarea id="ad-desc" required rows="3" placeholder="Detalhes do item, estado, valor, etc." class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Dias de Atendimento</label>
+                            <input type="text" id="ad-days" required placeholder="Ex: Seg a Sex" class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">Horários para Contato</label>
+                            <select id="ad-hours" class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent">
+                                <option value="08:00 às 18:00">08:00 às 18:00 (Comercial)</option>
+                                <option value="09:00 às 21:00">09:00 às 21:00</option>
+                                <option value="24 Horas">Atendimento 24 Horas</option>
+                                <option value="Finais de Semana">Finais de Semana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-bosque-goldlight mb-1">WhatsApp para Contato</label>
+                            <input type="tel" id="ad-whatsapp" required placeholder="(11) 90000-0000" class="w-full bg-bosque-dark border border-bosque-accent/40 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-bosque-accent">
+                        </div>
+                    </div>
+
+                    <div id="paid-links-section" class="space-y-3 pt-2 border-t border-bosque-accent/20 hidden">
+                        <p class="text-[11px] font-bold text-bosque-accent"><i class="fa-solid fa-crown mr-1"></i> Links Exclusivos de Anunciante Pago / Criador</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input type="url" id="ad-instagram" placeholder="Link do Instagram" class="bg-bosque-dark border border-bosque-accent/30 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="url" id="ad-facebook" placeholder="Link do Facebook" class="bg-bosque-dark border border-bosque-accent/30 rounded-xl px-3 py-2 text-xs text-white">
+                            <input type="url" id="ad-site" placeholder="Link do Site / Catálogo" class="bg-bosque-dark border border-bosque-accent/30 rounded-xl px-3 py-2 text-xs text-white">
+                        </div>
+                    </div>
+
+                    <div class="pt-3">
+                        <button type="submit" class="w-full bg-bosque-accent hover:bg-yellow-500 text-bosque-dark font-bold py-2.5 px-4 rounded-xl transition text-xs shadow-lg">
+                            Salvar e Publicar Anúncio
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const PUBLIC_SERVICES = [
+            { name: "Polícia Militar (Emergência 190)", phone: "190", category: "Segurança", desc: "Atendimento policial de emergência." },
+            { name: "Corpo de Bombeiros (Emergência 193)", phone: "193", category: "Segurança", desc: "Resgate e combate a incêndios em Cotia." },
+            { name: "Guarda Civil Municipal - GCM Cotia", phone: "153", category: "Segurança", desc: "Segurança pública municipal." },
+            { name: "Sabesp (Água e Esgoto)", phone: "0800 055 0195", category: "Utilidade", desc: "Vazamentos, falta d'água e atendimento." },
+            { name: "Enel São Paulo (Energia Elétrica)", phone: "0800 727 0196", category: "Utilidade", desc: "Falta de luz e emergências elétricas." },
+            { name: "Prefeitura Municipal de Cotia", phone: "(11) 4616-9620", category: "Prefeitura", desc: "Serviços administrativos e ouvidoria." },
+            { name: "UBS / Pronto Socorro Regional Cotia", phone: "(11) 4616-1234", category: "Saúde", desc: "Atendimento médico de urgência." }
+        ];
+
+        const BANNED_WORDS = [
+            'idiota', 'otario', 'imbecil', 'desgraça', 'lixo', 'merda', 'puta', 'caralho',
+            'droga', 'fdp', 'vagabundo', 'safado', 'estupido', 'incompetente', 'corno', 'porra',
+            'crianca', 'criancas', 'menor', 'bebe', 'infantil'
+        ];
+
+        let currentUser = JSON.parse(localStorage.getItem('conecta_bosque_user')) || null;
+        let ads = JSON.parse(localStorage.getItem('conecta_bosque_ads')) || [
+            {
+                id: 'ad-admin-1',
+                userId: 'admin-fabio',
+                userName: 'Fabio Martins',
+                category: 'servicos',
+                title: 'Serviços Profissionais de Mídia & Cobertura',
+                desc: 'Cobertura profissional para eventos e visuais no condomínio. Atendimento especializado.',
+                days: 'Segunda a Sábado',
+                hours: '24 Horas',
+                whatsapp: '11947917162',
+                isPaid: true,
+                isCreator: true,
+                instagram: 'https://instagram.com',
+                facebook: 'https://facebook.com',
+                site: 'https://fabiomartins.com',
+                clicks: 142,
+                createdAt: Date.now()
+            }
+        ];
+        let currentFilter = 'all';
+
+        window.onload = function() {
+            if (currentUser) {
+                showMainApp();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+            }
+            initSecurityShield();
+            renderAds();
+        };
+
+        function initSecurityShield() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p')) {
+                    e.preventDefault();
+                    triggerShieldWarning();
+                }
+            });
+            document.addEventListener('visibilitychange', () => {
+                const shield = document.getElementById('security-shield');
+                if (document.hidden) {
+                    shield.style.display = 'block';
+                } else {
+                    shield.style.display = 'none';
+                }
+            });
+        }
+
+        function triggerShieldWarning() {
+            const shield = document.getElementById('security-shield');
+            shield.style.display = 'block';
+            showModal('Proteção de Tela', 'Capturas de tela são bloqueadas por segurança.');
+            setTimeout(() => { shield.style.display = 'none'; }, 2000);
+        }
+
+        function showModal(title, message, iconClass = 'fa-solid fa-shield-halved') {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-icon').innerHTML = `<i class="${iconClass}"></i>`;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function maskCPF(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            input.value = value;
+        }
+
+        function validateCPF(cpf) {
+            cpf = cpf.replace(/[^\d]/g, '');
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let add = 0;
+            for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+            let rev = 11 - (add % 11);
+            if (rev === 10 || rev === 11) rev = 0;
+            if (rev !== parseInt(cpf.charAt(9))) return false;
+            add = 0;
+            for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+            rev = 11 - (add % 11);
+            if (rev === 10 || rev === 11) rev = 0;
+            if (rev !== parseInt(cpf.charAt(10))) return false;
+            return true;
+        }
+
+        function handleGoogleSignIn() {
+            const mockGoogleNames = ["Ana Paula Santos", "Marcos Vinicius", "Juliana Ribeiro", "Roberto Mendes"];
+            const randomName = mockGoogleNames[Math.floor(Math.random() * mockGoogleNames.length)];
+            const randomEmail = randomName.toLowerCase().replace(/ /g, '.') + '@gmail.com';
+
+            currentUser = {
+                id: 'google-user-' + Date.now(),
+                name: randomName,
+                rg: '32.456.789-x',
+                cpf: '123.456.789-09',
+                dob: '1990-05-12',
+                whatsapp: '(11) 98765-4321',
+                email: randomEmail,
+                isAdmin: false
+            };
+
+            localStorage.setItem('conecta_bosque_user', JSON.stringify(currentUser));
+            showModal('Conectado com Google', `Bem-vindo(a) ao Conecta Bosque, ${randomName}!`);
+            setTimeout(() => { closeModal(); showMainApp(); }, 1200);
+        }
+
+        function handleAuth(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const rg = document.getElementById('reg-rg').value.trim();
+            const cpf = document.getElementById('reg-cpf').value.trim();
+            const dobStr = document.getElementById('reg-dob').value;
+            const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+
+            if (containsOffensiveContent(name)) {
+                showModal('Nome Inválido', 'Contém termos não permitidos.', 'fa-solid fa-triangle-exclamation');
+                return;
+            }
+
+            const dob = new Date(dobStr);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+
+            if (isNaN(age) || age < 18) {
+                showModal('Acesso Negado', 'Menores de 18 anos não podem acessar.', 'fa-solid fa-triangle-exclamation');
+                return;
+            }
+
+            if (!validateCPF(cpf)) {
+                showModal('CPF Inválido', 'O CPF informado não é válido.', 'fa-solid fa-triangle-exclamation');
+                return;
+            }
+
+            currentUser = {
+                id: 'user-' + Date.now(),
+                name, rg, cpf, dob: dobStr, whatsapp, email,
+                isAdmin: email.toLowerCase().includes('fabio')
+            };
+
+            localStorage.setItem('conecta_bosque_user', JSON.stringify(currentUser));
+            showMainApp();
+        }
+
+        function logout() {
+            localStorage.removeItem('conecta_bosque_user');
+            currentUser = null;
+            location.reload();
+        }
+
+        function showMainApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = currentUser.name;
+        }
+
+        function containsOffensiveContent(text) {
+            const lower = text.toLowerCase();
+            for (let word of BANNED_WORDS) {
+                if (lower.includes(word)) return true;
+            }
+            return false;
+        }
+
+        function handleSearch(query) {
+            const q = query.trim().toLowerCase();
+            const resultsContainer = document.getElementById('public-services-results');
+            
+            if (q.length === 0) {
+                resultsContainer.classList.add('hidden');
+                renderAds(currentFilter, '');
+                return;
+            }
+
+            const matchedServices = PUBLIC_SERVICES.filter(s => 
+                s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || q.includes('policia') || q.includes('bombeiros') || q.includes('sabesp') || q.includes('enel') || q.includes('prefeitura')
+            );
+
+            if (matchedServices.length > 0 && (q.includes('policia') || q.includes('bombeiros') || q.includes('sabesp') || q.includes('enel') || q.includes('prefeitura') || q.includes('saude') || q.includes('emergencia'))) {
+                let html = '<p class="text-[10px] font-bold text-bosque-accent uppercase tracking-wider mb-1">Serviços Públicos Essenciais (Cotia):</p>';
+                matchedServices.forEach(s => {
+                    html += `
+                        <div class="bg-bosque-dark p-2 rounded-xl border border-bosque-accent/30 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-white">${s.name}</p>
+                                <p class="text-[10px] text-gray-300">${s.desc}</p>
+                            </div>
+                            <a href="tel:${s.phone.replace(/\D/g,'')}" class="bg-bosque-accent text-bosque-dark px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-yellow-500 transition">
+                                <i class="fa-solid fa-phone mr-1"></i> Ligar
+                            </a>
+                        </div>
+                    `;
+                });
+                resultsContainer.innerHTML = html;
+                resultsContainer.classList.remove('hidden');
+            } else {
+                resultsContainer.classList.add('hidden');
+            }
+
+            renderAds(currentFilter, q);
+        }
+
+        function filterCategory(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-bosque-accent', 'text-bosque-dark', 'shadow');
+                btn.classList.add('bg-bosque/80', 'text-gray-300');
+            });
+            document.getElementById(`cat-${cat}`).classList.remove('bg-bosque/80', 'text-gray-300');
+            document.getElementById(`cat-${cat}`).classList.add('bg-bosque-accent', 'text-bosque-dark', 'shadow');
+            renderAds(cat);
+        }
+
+        function renderAds(category = 'all', searchQuery = '') {
+            const container = document.getElementById('ads-container');
+            container.innerHTML = '';
+
+            let filtered = ads.filter(ad => {
+                if (category !== 'all' && ad.category !== category) return false;
+                if (searchQuery) {
+                    return ad.title.toLowerCase().includes(searchQuery.toLowerCase()) || ad.desc.toLowerCase().includes(searchQuery.toLowerCase());
+                }
+                return true;
+            });
+
+            document.getElementById('stats-total-ads').innerText = ads.length;
+            const totalClicks = ads.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
+            document.getElementById('stats-total-clicks').innerText = totalClicks;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <i class="fa-solid fa-box-open text-4xl mb-2 text-bosque-accent/50"></i>
+                        <p class="text-sm">Nenhum classificado encontrado.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(ad => {
+                const isDoacao = ad.category === 'doacoes';
+                const isOwnerOrAdmin = currentUser && (currentUser.id === ad.userId || currentUser.isAdmin);
+
+                let contactHtml = '';
+                if (ad.isPaid || ad.isCreator) {
+                    contactHtml = `
+                        <div class="flex flex-wrap gap-2 pt-2 border-t border-bosque-accent/20">
+                            <a href="https://wa.me/55${ad.whatsapp.replace(/\D/g,'')}" target="_blank" onclick="trackClick('${ad.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow">
+                                <i class="fa-brands fa-whatsapp"></i> <span>WhatsApp</span>
+                            </a>
+                            ${ad.instagram ? `<a href="${ad.instagram}" target="_blank" onclick="trackClick('${ad.id}')" class="bg-pink-600 text-white px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow"><i class="fa-brands fa-instagram"></i></a>` : ''}
+                            ${ad.facebook ? `<a href="${ad.facebook}" target="_blank" onclick="trackClick('${ad.id}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow"><i class="fa-brands fa-facebook"></i></a>` : ''}
+                            ${ad.site ? `<a href="${ad.site}" target="_blank" onclick="trackClick('${ad.id}')" class="bg-bosque-accent text-bosque-dark font-bold px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow"><i class="fa-solid fa-globe"></i> <span>Site</span></a>` : ''}
+                        </div>
+                    `;
+                } else {
+                    contactHtml = `
+                        <div class="pt-2 border-t border-bosque-accent/20 text-xs">
+                            <span class="text-gray-300 font-medium">WhatsApp para contato (Anote):</span>
+                            <div class="mt-1 bg-bosque-dark px-3 py-1.5 rounded-xl text-bosque-accent font-mono font-bold tracking-wider select-all">
+                                <i class="fa-solid fa-phone mr-1"></i> ${ad.whatsapp}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-bosque border ${isDoacao ? 'border-red-500/80' : 'border-bosque-accent/30'} rounded-3xl p-4 shadow-xl flex flex-col justify-between relative overflow-hidden`;
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDoacao ? 'bg-red-600 text-white' : (ad.isPaid ? 'bg-bosque-accent text-bosque-dark' : 'bg-bosque-dark text-gray-300 border border-bosque-accent/30')}">
+                                ${isDoacao ? '🎁 DOAÇÃO' : (ad.isPaid ? '⭐ DESTAQUE PAGO' : 'Anúncio Gratuito')}
+                            </span>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="shareAd('${ad.id}')" title="Compartilhar" class="p-1.5 bg-bosque-dark rounded-xl text-bosque-accent hover:bg-bosque-light transition">
+                                    <i class="fa-solid fa-share-nodes text-xs"></i>
+                                </button>
+                                ${isOwnerOrAdmin ? `
+                                    <button onclick="openEditAdModal('${ad.id}')" title="Editar" class="p-1.5 bg-bosque-dark rounded-xl text-yellow-400 hover:bg-bosque-light transition">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="deleteAd('${ad.id}')" title="Excluir" class="p-1.5 bg-bosque-dark rounded-xl text-red-400 hover:bg-bosque-light transition">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <h3 class="text-base font-bold text-bosque-goldlight mt-3">${ad.title}</h3>
+                        <p class="text-xs text-gray-200 mt-1 leading-relaxed">${ad.desc}</p>
+                        
+                        <div class="mt-3 flex items-center space-x-3 text-[11px] text-gray-300">
+                            <span><i class="fa-regular fa-calendar-days text-bosque-accent mr-1"></i> ${ad.days}</span>
+                            <span><i class="fa-regular fa-clock text-bosque-accent mr-1"></i> ${ad.hours}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3">
+                        <div class="flex items-center justify-between text-[10px] text-gray-400 mb-2">
+                            <span>Por: ${ad.userName}</span>
+                            <span>Cliques: ${ad.clicks || 0}</span>
+                        </div>
+                        ${contactHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openNewAdModal() {
+            document.getElementById('ad-modal-title').innerText = "Novo Classificado";
+            document.getElementById('ad-form').reset();
+            document.getElementById('ad-id').value = '';
+            document.getElementById('free-tier-notice').classList.remove('hidden');
+            if (currentUser && currentUser.isAdmin) {
+                document.getElementById('paid-links-section').classList.remove('hidden');
+                document.getElementById('ad-is-paid').value = 'true';
+            } else {
+                document.getElementById('paid-links-section').classList.add('hidden');
+                document.getElementById('ad-is-paid').value = 'false';
+            }
+            document.getElementById('ad-modal').classList.remove('hidden');
+        }
+
+        function openEditAdModal(id) {
+            const ad = ads.find(a => a.id === id);
+            if (!ad) return;
+            document.getElementById('ad-modal-title').innerText = "Editar Classificado";
+            document.getElementById('ad-id').value = ad.id;
+            document.getElementById('ad-category').value = ad.category;
+            document.getElementById('ad-title').value = ad.title;
+            document.getElementById('ad-desc').value = ad.desc;
+            document.getElementById('ad-days').value = ad.days;
+            document.getElementById('ad-hours').value = ad.hours;
+            document.getElementById('ad-whatsapp').value = ad.whatsapp;
+            document.getElementById('ad-is-paid').value = ad.isPaid ? 'true' : 'false';
+
+            if (ad.isPaid || ad.isCreator) {
+                document.getElementById('paid-links-section').classList.remove('hidden');
+                document.getElementById('ad-instagram').value = ad.instagram || '';
+                document.getElementById('ad-facebook').value = ad.facebook || '';
+                document.getElementById('ad-site').value = ad.site || '';
+                document.getElementById('free-tier-notice').classList.add('hidden');
+            } else {
+                document.getElementById('paid-links-section').classList.add('hidden');
+                document.getElementById('free-trail-notice')?.classList.remove('hidden');
+            }
+
+            document.getElementById('ad-modal').classList.remove('hidden');
+        }
+
+        function closeAdModal() {
+            document.getElementById('ad-modal').classList.add('hidden');
+        }
+
+        function saveAd(e) {
+            e.preventDefault();
+            const id = document.getElementById('ad-id').value;
+            const category = document.getElementById('ad-category').value;
+            const title = document.getElementById('ad-title').value.trim();
+            const desc = document.getElementById('ad-desc').value.trim();
+            const days = document.getElementById('ad-days').value.trim();
+            const hours = document.getElementById('ad-hours').value;
+            const whatsapp = document.getElementById('ad-whatsapp').value.trim();
+            const isPaid = document.getElementById('ad-is-paid').value === 'true' || (currentUser && currentUser.isAdmin);
+
+            if (containsOffensiveContent(title) || containsOffensiveContent(desc)) {
+                showModal('Conteúdo Bloqueado', 'Contém termos ofensivos ou inadequados.', 'fa-solid fa-triangle-exclamation');
+                return;
+            }
+
+            if (id) {
+                const index = ads.findIndex(a => a.id === id);
+                if (index !== -1) {
+                    ads[index].category = category;
+                    ads[index].title = title;
+                    ads[index].desc = desc;
+                    ads[index].days = days;
+                    ads[index].hours = hours;
+                    ads[index].whatsapp = whatsapp;
+                    if (isPaid || ads[index].isCreator) {
+                        ads[index].instagram = document.getElementById('ad-instagram')?.value || '';
+                        ads[index].facebook = document.getElementById('ad-facebook')?.value || '';
+                        ads[index].site = document.getElementById('ad-site')?.value || '';
+                    }
+                }
+            } else {
+                const newAd = {
+                    id: 'ad-' + Date.now(),
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    category,
+                    title,
+                    desc,
+                    days,
+                    hours,
+                    whatsapp,
+                    isPaid,
+                    isCreator: currentUser.isAdmin,
+                    instagram: isPaid ? (document.getElementById('ad-instagram')?.value || '') : '',
+                    facebook: isPaid ? (document.getElementById('ad-facebook')?.value || '') : '',
+                    site: isPaid ? (document.getElementById('ad-site')?.value || '') : '',
+                    clicks: 0,
+                    createdAt: Date.now()
+                };
+                ads.unshift(newAd);
+            }
+
+            localStorage.setItem('conecta_bosque_ads', JSON.stringify(ads));
+            closeAdModal();
+            renderAds(currentFilter);
+            showModal('Sucesso', 'Classificado publicado com sucesso!');
+        }
+
+        function deleteAd(id) {
+            const ad = ads.find(a => a.id === id);
+            if (!ad) return;
+            if (ad.isCreator && (!currentUser || !currentUser.isAdmin)) {
+                showModal('Ação Negada', 'Este anúncio é imune a remoção.', 'fa-solid fa-shield-halved');
+                return;
+            }
+            if (confirm('Tem certeza que deseja excluir este classificado?')) {
+                ads = ads.filter(a => a.id !== id);
+                localStorage.setItem('conecta_bosque_ads', JSON.stringify(ads));
+                renderAds(currentFilter);
+            }
+        }
+
+        function shareAd(id) {
+            const ad = ads.find(a => a.id === id);
+            if (!ad) return;
+            ad.clicks = (ad.clicks || 0) + 1;
+            localStorage.setItem('conecta_bosque_ads', JSON.stringify(ads));
+            
+            const shareUrl = window.location.href.split('?')[0] + '?ad=' + id;
+            if (navigator.share) {
+                navigator.share({ title: ad.title, text: `Confira no Conecta Bosque: ${ad.title}`, url: shareUrl }).catch(() => {});
+            } else {
+                prompt("Copie o link:", shareUrl);
+            }
+            renderAds(currentFilter);
+        }
+
+        function trackClick(id) {
+            const ad = ads.find(a => a.id === id);
+            if (ad) {
+                ad.clicks = (ad.clicks || 0) + 1;
+                localStorage.setItem('conecta_bosque_ads', JSON.stringify(ads));
+            }
+        }
+    </script>
+</body>
+</html>
